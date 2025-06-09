@@ -1,220 +1,189 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Notruf Hamburg Bank</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notruf Hamburg Bank</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --rot: #d50000;
+      --weiß: #ffffff;
+      --grau: #f5f5f5;
+      --dunkel: #1c1c1c;
+      --textHell: #eeeeee;
+    }
 
-<style>
-  /* Reset */
-  * {
-    box-sizing: border-box;
-  }
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--weiß);
+      color: var(--dunkel);
+      transition: all 0.3s ease;
+    }
 
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f4f6f8;
-    color: #2d2d2d;
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+    body.darkmode {
+      background-color: var(--dunkel);
+      color: var(--textHell);
+    }
 
-  header {
-    background-color: #006633; /* VR Bank Grün */
-    width: 100%;
-    padding: 1.5rem 2rem;
-    color: white;
-    font-weight: 700;
-    font-size: 1.8rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    text-align: center;
-  }
+    header {
+      background-color: var(--rot);
+      color: var(--weiß);
+      padding: 1rem;
+      text-align: center;
+    }
 
-  main {
-    background: white;
-    margin: 2rem auto;
-    padding: 2rem 3rem;
-    border-radius: 12px;
-    max-width: 480px;
-    width: 90%;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
-  }
+    main {
+      max-width: 500px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background-color: var(--grau);
+      border-radius: 8px;
+    }
 
-  h1 {
-    font-weight: 700;
-    margin-bottom: 1.2rem;
-    color: #004d26;
-  }
+    main.darkmode {
+      background-color: #2a2a2a;
+    }
 
-  #loginStatus {
-    margin-bottom: 1.5rem;
-    font-weight: 600;
-    font-size: 1.1rem;
-  }
+    h1 {
+      margin: 0 0 1rem;
+    }
 
-  #userInfo p {
-    font-size: 1.2rem;
-  }
+    label {
+      display: block;
+      margin-top: 1rem;
+    }
 
-  #kontostand {
-    font-weight: 700;
-    color: #006633;
-    font-size: 1.5rem;
-  }
+    input {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
 
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-top: 1rem;
-  }
+    button {
+      background-color: var(--rot);
+      color: var(--weiß);
+      padding: 0.75rem;
+      border: none;
+      border-radius: 4px;
+      margin-top: 1rem;
+      cursor: pointer;
+      width: 100%;
+      font-weight: bold;
+    }
 
-  input[type="email"],
-  input[type="password"] {
-    padding: 0.75rem 1rem;
-    border: 2px solid #c3d9c5;
-    border-radius: 6px;
-    font-size: 1rem;
-    transition: border-color 0.3s ease;
-  }
+    .hidden {
+      display: none;
+    }
 
-  input[type="email"]:focus,
-  input[type="password"]:focus {
-    border-color: #006633;
-    outline: none;
-  }
+    .toggle-mode {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: 2px solid var(--rot);
+      color: var(--rot);
+      padding: 0.5rem;
+      cursor: pointer;
+      border-radius: 50%;
+    }
 
-  button {
-    background-color: #006633;
-    color: white;
-    padding: 0.9rem 1rem;
-    font-weight: 700;
-    font-size: 1.1rem;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-
-  button:hover {
-    background-color: #004d26;
-  }
-
-  #logoutBtn {
-    margin-top: 1.5rem;
-    background-color: #cc2b2b;
-  }
-
-  #logoutBtn:hover {
-    background-color: #990000;
-  }
-
-  footer {
-    margin-top: auto;
-    padding: 1rem;
-    font-size: 0.85rem;
-    color: #888;
-  }
-</style>
-
+    #dashboard {
+      margin-top: 2rem;
+    }
+  </style>
 </head>
 <body>
+  <button class="toggle-mode" onclick="toggleDarkMode()">🌙</button>
+  <header>
+    <h1>Bank | Notruf Hamburg</h1>
+  </header>
+  <main id="main">
+    <div id="auth">
+      <h2>Login</h2>
+      <label for="email">E-Mail</label>
+      <input type="email" id="email" required>
+      <label for="password">Passwort</label>
+      <input type="password" id="password" required>
+      <button onclick="login()">Einloggen</button>
+    </div>
 
-<header>Notruf Hamburg Bank</header>
+    <div id="dashboard" class="hidden">
+      <p id="loginStatus"></p>
+      <p><strong>Kontostand:</strong> <span id="kontostand">0.00</span> €</p>
+      <p><strong>Kredite:</strong> <span id="kredite">0.00</span> €</p>
+      <p><strong>Krypto-Investitionen:</strong> <span id="krypto">0.00</span> €</p>
+      <button onclick="logout()">Ausloggen</button>
+    </div>
+  </main>
 
-<main>
-  <h1>Willkommen</h1>
-  <div id="loginStatus">Bitte melde dich an.</div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  <div id="userInfo" style="display:none;">
-    <p>Dein Kontostand: <span id="kontostand">Lade...</span> €</p>
-    <button id="logoutBtn">Logout</button>
-  </div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDMKTj0qcDVB5-_8BOsSf72BFJC6etDyIw",
+      authDomain: "bank-notruf-hmb-ncrp.firebaseapp.com",
+      projectId: "bank-notruf-hmb-ncrp",
+      storageBucket: "bank-notruf-hmb-ncrp.appspot.com",
+      messagingSenderId: "189001254033",
+      appId: "1:189001254033:web:032cf328cc900ba4ff2b30"
+    };
 
-  <div id="loginFormContainer">
-    <h2>Login</h2>
-    <form id="loginForm">
-      <input type="email" id="email" placeholder="E-Mail" required />
-      <input type="password" id="password" placeholder="Passwort" required />
-      <button type="submit">Anmelden</button>
-    </form>
-  </div>
-</main>
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore(app);
 
-<footer>© 2025 Notruf Hamburg Bank. Alle Rechte vorbehalten.</footer>
+    const loginStatus = document.getElementById("loginStatus");
+    const kontostandSpan = document.getElementById("kontostand");
+    const krediteSpan = document.getElementById("kredite");
+    const kryptoSpan = document.getElementById("krypto");
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+    function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => console.log("Login erfolgreich"))
+        .catch((error) => alert("Fehler beim Login: " + error.message));
+    }
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDMKTj0qcDVB5-_8BOsSf72BFJC6etDyIw",
-    authDomain: "bank-notruf-hmb-ncrp.firebaseapp.com",
-    projectId: "bank-notruf-hmb-ncrp",
-    storageBucket: "bank-notruf-hmb-ncrp.firebasestorage.app",
-    messagingSenderId: "189001254033",
-    appId: "1:189001254033:web:032cf328cc900ba4ff2b30"
-  };
+    function logout() {
+      signOut(auth);
+    }
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+    onAuthStateChanged(auth, async (user) => {
+      const authDiv = document.getElementById("auth");
+      const dash = document.getElementById("dashboard");
+      if (user) {
+        authDiv.classList.add("hidden");
+        dash.classList.remove("hidden");
 
-  const loginStatus = document.getElementById("loginStatus");
-  const userInfo = document.getElementById("userInfo");
-  const kontostandSpan = document.getElementById("kontostand");
-  const loginFormContainer = document.getElementById("loginFormContainer");
-  const loginForm = document.getElementById("loginForm");
-  const logoutBtn = document.getElementById("logoutBtn");
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
 
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      loginStatus.textContent = `Eingeloggt als: ${user.email}`;
-      userInfo.style.display = "block";
-      loginFormContainer.style.display = "none";
-
-      // Firestore Daten laden
-      const docRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        const userData = docSnap.data();
-        const kontostand = userData?.kontostand ?? 0;
-        kontostandSpan.textContent = kontostand.toFixed(2);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          loginStatus.textContent = `Willkommen, ${data.name ?? user.email}`;
+          kontostandSpan.textContent = Number(data.kontostand || 0).toFixed(2);
+          krediteSpan.textContent = Number(data.kredite || 0).toFixed(2);
+          kryptoSpan.textContent = Number(data.krypto || 0).toFixed(2);
+        } else {
+          loginStatus.textContent = "Kein Zugriff – Konto nicht registriert.";
+        }
       } else {
-        kontostandSpan.textContent = "Keine Daten gefunden";
+        authDiv.classList.remove("hidden");
+        dash.classList.add("hidden");
       }
+    });
 
-    } else {
-      loginStatus.textContent = "Nicht eingeloggt. Bitte Login unten verwenden.";
-      userInfo.style.display = "none";
-      loginFormContainer.style.display = "block";
-      kontostandSpan.textContent = "Lade...";
+    window.toggleDarkMode = function () {
+      document.body.classList.toggle("darkmode");
+      document.querySelector("main").classList.toggle("darkmode");
     }
-  });
-
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = loginForm.email.value;
-    const password = loginForm.password.value;
-
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      loginForm.reset();
-    } catch (error) {
-      alert("Login fehlgeschlagen: " + error.message);
-    }
-  });
-
-  logoutBtn.addEventListener("click", async () => {
-    await signOut(auth);
-  });
-</script>
-
+  </script>
 </body>
 </html>
