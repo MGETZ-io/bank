@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Notruf Hamburg Bank</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --rot: #d50000;
@@ -13,7 +13,6 @@
       --dunkel: #1c1c1c;
       --textHell: #eeeeee;
     }
-
     body {
       margin: 0;
       font-family: 'Roboto', sans-serif;
@@ -21,64 +20,67 @@
       color: var(--dunkel);
       transition: all 0.3s ease;
     }
-
     body.darkmode {
       background-color: var(--dunkel);
       color: var(--textHell);
     }
-
     header {
       background-color: var(--rot);
       color: var(--weiß);
       padding: 1rem;
       text-align: center;
     }
-
     main {
       max-width: 500px;
       margin: 2rem auto;
       padding: 2rem;
       background-color: var(--grau);
       border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
     }
-
     main.darkmode {
       background-color: #2a2a2a;
     }
-
     h1 {
       margin: 0 0 1rem;
     }
-
+    h2 {
+      margin-top: 2rem;
+    }
     label {
       display: block;
       margin-top: 1rem;
+      font-weight: 700;
     }
-
     input {
       width: 100%;
       padding: 0.5rem;
       margin-top: 0.5rem;
       border: 1px solid #ccc;
       border-radius: 4px;
+      font-size: 1rem;
+      box-sizing: border-box;
     }
-
     button {
       background-color: var(--rot);
       color: var(--weiß);
       padding: 0.75rem;
       border: none;
       border-radius: 4px;
-      margin-top: 1rem;
+      margin-top: 1.5rem;
       cursor: pointer;
       width: 100%;
       font-weight: bold;
+      font-size: 1.1rem;
+      transition: background-color 0.2s ease;
     }
-
+    button:hover {
+      background-color: #b00000;
+    }
     .hidden {
       display: none;
     }
-
     .toggle-mode {
       position: fixed;
       top: 1rem;
@@ -89,15 +91,17 @@
       padding: 0.5rem;
       cursor: pointer;
       border-radius: 50%;
+      font-size: 1.2rem;
+      user-select: none;
+      transition: color 0.3s ease, border-color 0.3s ease;
     }
-
-    #dashboard {
-      margin-top: 2rem;
+    body.darkmode .toggle-mode {
+      color: var(--weiß);
+      border-color: var(--weiß);
     }
-
-    #adminButton {
-      margin-top: 1rem;
-      background-color: #333;
+    #dashboard p {
+      margin: 0.8rem 0;
+      font-size: 1.1rem;
     }
   </style>
 </head>
@@ -110,10 +114,19 @@
     <div id="auth">
       <h2>Login</h2>
       <label for="email">E-Mail</label>
-      <input type="email" id="email" required>
+      <input type="email" id="email" required />
       <label for="password">Passwort</label>
-      <input type="password" id="password" required>
+      <input type="password" id="password" required />
       <button onclick="login()">Einloggen</button>
+
+      <h2>Registrieren</h2>
+      <label for="regEmail">E-Mail</label>
+      <input type="email" id="regEmail" required />
+      <label for="regPassword">Passwort</label>
+      <input type="password" id="regPassword" required />
+      <label for="name">Name</label>
+      <input type="text" id="name" required />
+      <button onclick="register()">Registrieren</button>
     </div>
 
     <div id="dashboard" class="hidden">
@@ -122,14 +135,19 @@
       <p><strong>Kredite:</strong> <span id="kredite">0.00</span> €</p>
       <p><strong>Krypto-Investitionen:</strong> <span id="krypto">0.00</span> €</p>
       <button onclick="logout()">Ausloggen</button>
-      <button id="adminButton" class="hidden" onclick="location.href='admin.html'">Zur Admin-Seite</button>
     </div>
   </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut,
+      createUserWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDMKTj0qcDVB5-_8BOsSf72BFJC6etDyIw",
@@ -148,14 +166,46 @@
     const kontostandSpan = document.getElementById("kontostand");
     const krediteSpan = document.getElementById("kredite");
     const kryptoSpan = document.getElementById("krypto");
-    const adminButton = document.getElementById("adminButton");
 
     function login() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
+      console.log("Login versucht mit", email); // Debug
       signInWithEmailAndPassword(auth, email, password)
         .then(() => console.log("Login erfolgreich"))
         .catch((error) => alert("Fehler beim Login: " + error.message));
+    }
+
+    async function register() {
+      const email = document.getElementById("regEmail").value;
+      const password = document.getElementById("regPassword").value;
+      const name = document.getElementById("name").value;
+
+      if (!email || !password || !name) {
+        alert("Bitte alle Felder ausfüllen!");
+        return;
+      }
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // User-Daten in Firestore speichern
+        await setDoc(doc(db, "users", user.uid), {
+          name: name,
+          kontostand: 4500, // Startguthaben
+          kredite: 0,
+          krypto: 0
+        });
+
+        alert("Registrierung erfolgreich! Du kannst dich jetzt einloggen.");
+        // Optional: Formular leeren
+        document.getElementById("regEmail").value = "";
+        document.getElementById("regPassword").value = "";
+        document.getElementById("name").value = "";
+      } catch (error) {
+        alert("Fehler bei der Registrierung: " + error.message);
+      }
     }
 
     function logout() {
@@ -165,6 +215,7 @@
     onAuthStateChanged(auth, async (user) => {
       const authDiv = document.getElementById("auth");
       const dash = document.getElementById("dashboard");
+
       if (user) {
         authDiv.classList.add("hidden");
         dash.classList.remove("hidden");
@@ -174,28 +225,26 @@
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          loginStatus.textContent = `Willkommen, ${data.name ?? user.email}`;
+          loginStatus.textContent = `Eingeloggt als ${data.name ?? user.email} (${user.email})`;
           kontostandSpan.textContent = Number(data.kontostand || 0).toFixed(2);
           krediteSpan.textContent = Number(data.kredite || 0).toFixed(2);
           kryptoSpan.textContent = Number(data.krypto || 0).toFixed(2);
-
-          if (data.admin === true) {
-            adminButton.classList.remove("hidden");
-          }
         } else {
           loginStatus.textContent = "Kein Zugriff – Konto nicht registriert.";
+          kontostandSpan.textContent = "0.00";
+          krediteSpan.textContent = "0.00";
+          kryptoSpan.textContent = "0.00";
         }
       } else {
         authDiv.classList.remove("hidden");
         dash.classList.add("hidden");
-        adminButton.classList.add("hidden");
       }
     });
 
     window.toggleDarkMode = function () {
       document.body.classList.toggle("darkmode");
       document.querySelector("main").classList.toggle("darkmode");
-    }
+    };
   </script>
 </body>
 </html>
