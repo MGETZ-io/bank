@@ -94,6 +94,11 @@
     #dashboard {
       margin-top: 2rem;
     }
+
+    #adminButton {
+      margin-top: 1rem;
+      background-color: #333;
+    }
   </style>
 </head>
 <body>
@@ -117,6 +122,7 @@
       <p><strong>Kredite:</strong> <span id="kredite">0.00</span> €</p>
       <p><strong>Krypto-Investitionen:</strong> <span id="krypto">0.00</span> €</p>
       <button onclick="logout()">Ausloggen</button>
+      <button id="adminButton" class="hidden" onclick="location.href='admin.html'">Zur Admin-Seite</button>
     </div>
   </main>
 
@@ -142,6 +148,7 @@
     const kontostandSpan = document.getElementById("kontostand");
     const krediteSpan = document.getElementById("kredite");
     const kryptoSpan = document.getElementById("krypto");
+    const adminButton = document.getElementById("adminButton");
 
     function login() {
       const email = document.getElementById("email").value;
@@ -171,12 +178,17 @@
           kontostandSpan.textContent = Number(data.kontostand || 0).toFixed(2);
           krediteSpan.textContent = Number(data.kredite || 0).toFixed(2);
           kryptoSpan.textContent = Number(data.krypto || 0).toFixed(2);
+
+          if (data.admin === true) {
+            adminButton.classList.remove("hidden");
+          }
         } else {
           loginStatus.textContent = "Kein Zugriff – Konto nicht registriert.";
         }
       } else {
         authDiv.classList.remove("hidden");
         dash.classList.add("hidden");
+        adminButton.classList.add("hidden");
       }
     });
 
