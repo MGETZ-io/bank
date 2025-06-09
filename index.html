@@ -1,91 +1,220 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bank – Notruf Hamburg</title>
-  <script type="module">
-    // Firebase importieren
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, getDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Notruf Hamburg Bank</title>
 
-    // Firebase-Konfiguration
-    const firebaseConfig = {
-      apiKey: "AIzaSyDMKTj0qcDVB5-_8BOsSf72BFJC6etDyIw",
-      authDomain: "bank-notruf-hmb-ncrp.firebaseapp.com",
-      projectId: "bank-notruf-hmb-ncrp",
-      storageBucket: "bank-notruf-hmb-ncrp.firebasestorage.app",
-      messagingSenderId: "189001254033",
-      appId: "1:189001254033:web:032cf328cc900ba4ff2b30"
-    };
+<style>
+  /* Reset */
+  * {
+    box-sizing: border-box;
+  }
 
-    // Firebase initialisieren
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f4f6f8;
+    color: #2d2d2d;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 
-    const loginForm = document.getElementById("login-form");
-    const output = document.getElementById("output");
+  header {
+    background-color: #006633; /* VR Bank Grün */
+    width: 100%;
+    padding: 1.5rem 2rem;
+    color: white;
+    font-weight: 700;
+    font-size: 1.8rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+  }
 
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = loginForm.email.value;
-      const password = loginForm.password.value;
+  main {
+    background: white;
+    margin: 2rem auto;
+    padding: 2rem 3rem;
+    border-radius: 12px;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+  }
 
-      try {
-        const cred = await signInWithEmailAndPassword(auth, email, password);
-        const user = cred.user;
+  h1 {
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+    color: #004d26;
+  }
 
-        // Prüfe ob Mitarbeiter oder Kunde
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        const isAdminDoc = await getDoc(doc(db, "admins", user.uid));
+  #loginStatus {
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
 
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          output.innerHTML = `
-            <h2>Willkommen ${data.name}</h2>
-            <p><strong>IBAN:</strong> ${data.iban}</p>
-            <p><strong>Kontostand:</strong> ${data.kontostand.toFixed(2)} €</p>
-            <h3>Kredite:</h3>
-            <ul>${(data.kredite || []).map(k =>
-              `<li>${k.kreditgeber}: ${k.betrag} € (Rest: ${k.restschuld} €, ${k.laufzeitMonate} Monate)</li>`).join('') || "Keine Kredite"}</ul>
-            <h3>Krypto-Investitionen:</h3>
-            <ul>${(data.krypto || []).map(k =>
-              `<li>${k.währung}: ${k.anzahl} (${k.wertInEuro} €)</li>`).join('') || "Keine Investitionen"}</ul>
-          `;
-        } else if (isAdminDoc.exists()) {
-          // Admin-Zugriff: Alle Nutzer anzeigen
-          const allUsersSnap = await getDocs(collection(db, "users"));
-          output.innerHTML = `<h2>Mitarbeiter-Ansicht</h2>`;
-          allUsersSnap.forEach(docSnap => {
-            const d = docSnap.data();
-            output.innerHTML += `
-              <div style="border:1px solid #ccc; margin:10px; padding:10px;">
-                <strong>${d.name}</strong><br>
-                IBAN: ${d.iban}<br>
-                Kontostand: ${d.kontostand.toFixed(2)} €<br>
-                Kredite: ${(d.kredite || []).length}<br>
-                Krypto: ${(d.krypto || []).length}
-              </div>
-            `;
-          });
-        } else {
-          output.innerHTML = `<p style="color:red;">Kein Zugriff – Konto nicht registriert.</p>`;
-        }
-      } catch (error) {
-        output.innerHTML = `<p style="color:red;">Fehler: ${error.message}</p>`;
-      }
-    });
-  </script>
+  #userInfo p {
+    font-size: 1.2rem;
+  }
+
+  #kontostand {
+    font-weight: 700;
+    color: #006633;
+    font-size: 1.5rem;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  input[type="email"],
+  input[type="password"] {
+    padding: 0.75rem 1rem;
+    border: 2px solid #c3d9c5;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+  }
+
+  input[type="email"]:focus,
+  input[type="password"]:focus {
+    border-color: #006633;
+    outline: none;
+  }
+
+  button {
+    background-color: #006633;
+    color: white;
+    padding: 0.9rem 1rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #004d26;
+  }
+
+  #logoutBtn {
+    margin-top: 1.5rem;
+    background-color: #cc2b2b;
+  }
+
+  #logoutBtn:hover {
+    background-color: #990000;
+  }
+
+  footer {
+    margin-top: auto;
+    padding: 1rem;
+    font-size: 0.85rem;
+    color: #888;
+  }
+</style>
+
 </head>
-<body style="font-family:sans-serif; max-width:600px; margin:40px auto;">
-  <h1>🏦 Notruf Hamburg Bank</h1>
-  <form id="login-form">
-    <label>Email:<br><input type="email" name="email" required /></label><br><br>
-    <label>Passwort:<br><input type="password" name="password" required /></label><br><br>
-    <button type="submit">Login</button>
-  </form>
-  <div id="output" style="margin-top:30px;"></div>
+<body>
+
+<header>Notruf Hamburg Bank</header>
+
+<main>
+  <h1>Willkommen</h1>
+  <div id="loginStatus">Bitte melde dich an.</div>
+
+  <div id="userInfo" style="display:none;">
+    <p>Dein Kontostand: <span id="kontostand">Lade...</span> €</p>
+    <button id="logoutBtn">Logout</button>
+  </div>
+
+  <div id="loginFormContainer">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="E-Mail" required />
+      <input type="password" id="password" placeholder="Passwort" required />
+      <button type="submit">Anmelden</button>
+    </form>
+  </div>
+</main>
+
+<footer>© 2025 Notruf Hamburg Bank. Alle Rechte vorbehalten.</footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMKTj0qcDVB5-_8BOsSf72BFJC6etDyIw",
+    authDomain: "bank-notruf-hmb-ncrp.firebaseapp.com",
+    projectId: "bank-notruf-hmb-ncrp",
+    storageBucket: "bank-notruf-hmb-ncrp.firebasestorage.app",
+    messagingSenderId: "189001254033",
+    appId: "1:189001254033:web:032cf328cc900ba4ff2b30"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  const loginStatus = document.getElementById("loginStatus");
+  const userInfo = document.getElementById("userInfo");
+  const kontostandSpan = document.getElementById("kontostand");
+  const loginFormContainer = document.getElementById("loginFormContainer");
+  const loginForm = document.getElementById("loginForm");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      loginStatus.textContent = `Eingeloggt als: ${user.email}`;
+      userInfo.style.display = "block";
+      loginFormContainer.style.display = "none";
+
+      // Firestore Daten laden
+      const docRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        const kontostand = userData?.kontostand ?? 0;
+        kontostandSpan.textContent = kontostand.toFixed(2);
+      } else {
+        kontostandSpan.textContent = "Keine Daten gefunden";
+      }
+
+    } else {
+      loginStatus.textContent = "Nicht eingeloggt. Bitte Login unten verwenden.";
+      userInfo.style.display = "none";
+      loginFormContainer.style.display = "block";
+      kontostandSpan.textContent = "Lade...";
+    }
+  });
+
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = loginForm.email.value;
+    const password = loginForm.password.value;
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      loginForm.reset();
+    } catch (error) {
+      alert("Login fehlgeschlagen: " + error.message);
+    }
+  });
+
+  logoutBtn.addEventListener("click", async () => {
+    await signOut(auth);
+  });
+</script>
+
 </body>
 </html>
