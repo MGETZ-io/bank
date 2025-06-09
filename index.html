@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bank – Notruf Hamburg</title>
+  <script type="module">
+    // Firebase importieren
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // Firebase-Konfiguration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDMKTj0qcDVB5-_8BOsSf72BFJC6etDyIw",
+      authDomain: "bank-notruf-hmb-ncrp.firebaseapp.com",
+      projectId: "bank-notruf-hmb-ncrp",
+      storageBucket: "bank-notruf-hmb-ncrp.firebasestorage.app",
+      messagingSenderId: "189001254033",
+      appId: "1:189001254033:web:032cf328cc900ba4ff2b30"
+    };
+
+    // Firebase initialisieren
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const loginForm = document.getElementById("login-form");
+    const output = document.getElementById("output");
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = loginForm.email.value;
+      const password = loginForm.password.value;
+
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        const user = cred.user;
+
+        // Prüfe ob Mitarbeiter oder Kunde
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const isAdminDoc = await getDoc(doc(db, "admins", user.uid));
+
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          output.innerHTML = `
+            <h2>Willkommen ${data.name}</h2>
+            <p><strong>IBAN:</strong> ${data.iban}</p>
+            <p><strong>Kontostand:</strong> ${data.kontostand.toFixed(2)} €</p>
+            <h3>Kredite:</h3>
+            <ul>${(data.kredite || []).map(k =>
+              `<li>${k.kreditgeber}: ${k.betrag} € (Rest: ${k.restschuld} €, ${k.laufzeitMonate} Monate)</li>`).join('') || "Keine Kredite"}</ul>
+            <h3>Krypto-Investitionen:</h3>
+            <ul>${(data.krypto || []).map(k =>
+              `<li>${k.währung}: ${k.anzahl} (${k.wertInEuro} €)</li>`).join('') || "Keine Investitionen"}</ul>
+          `;
+        } else if (isAdminDoc.exists()) {
+          // Admin-Zugriff: Alle Nutzer anzeigen
+          const allUsersSnap = await getDocs(collection(db, "users"));
+          output.innerHTML = `<h2>Mitarbeiter-Ansicht</h2>`;
+          allUsersSnap.forEach(docSnap => {
+            const d = docSnap.data();
+            output.innerHTML += `
+              <div style="border:1px solid #ccc; margin:10px; padding:10px;">
+                <strong>${d.name}</strong><br>
+                IBAN: ${d.iban}<br>
+                Kontostand: ${d.kontostand.toFixed(2)} €<br>
+                Kredite: ${(d.kredite || []).length}<br>
+                Krypto: ${(d.krypto || []).length}
+              </div>
+            `;
+          });
+        } else {
+          output.innerHTML = `<p style="color:red;">Kein Zugriff – Konto nicht registriert.</p>`;
+        }
+      } catch (error) {
+        output.innerHTML = `<p style="color:red;">Fehler: ${error.message}</p>`;
+      }
+    });
+  </script>
+</head>
+<body style="font-family:sans-serif; max-width:600px; margin:40px auto;">
+  <h1>🏦 Notruf Hamburg Bank</h1>
+  <form id="login-form">
+    <label>Email:<br><input type="email" name="email" required /></label><br><br>
+    <label>Passwort:<br><input type="password" name="password" required /></label><br><br>
+    <button type="submit">Login</button>
+  </form>
+  <div id="output" style="margin-top:30px;"></div>
+</body>
+</html>
